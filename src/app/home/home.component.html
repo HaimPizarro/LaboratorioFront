@@ -1,0 +1,398 @@
+<div class="min-h-screen bg-slate-100 font-sans">
+  <!-- NAVBAR SUPERIOR -->
+  <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="bg-blue-600 text-white p-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </div>
+      <h1 class="text-xl font-bold text-slate-800">Panel de Laboratorios</h1>
+    </div>
+
+    <!-- Sección derecha del navbar: solo se muestra si hay usuario -->
+    <div class="flex items-center gap-4" *ngIf="currentUser as user">
+      <div class="relative">
+        <button
+          type="button"
+          (click)="toggleUserMenu()"
+          class="flex items-center gap-2 cursor-pointer select-none"
+        >
+          <div
+            class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm"
+          >
+            {{ user.name.charAt(0) }}
+          </div>
+          <span class="text-sm font-medium text-slate-700 hidden md:block">
+            {{ user.name }}
+          </span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4 text-slate-500 hidden md:block"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- Dropdown -->
+        <div
+          *ngIf="showUserMenu"
+          class="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-sm z-20"
+        >
+          <!-- Solo ADMIN: Administrar cuentas -->
+          <button
+            *ngIf="user.role === 'admin'"
+            type="button"
+            (click)="irAdministrarCuentas()"
+            class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700"
+          >
+            Administrar cuentas
+          </button>
+
+          <!-- Todos: Modificar perfil -->
+          <button
+            type="button"
+            (click)="irPerfil()"
+            class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700"
+          >
+            Modificar perfil
+          </button>
+
+          <!-- Todos: Cerrar sesión -->
+          <button
+            type="button"
+            (click)="logout()"
+            class="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="p-6 max-w-7xl mx-auto">
+    <!-- Encabezado de Sección -->
+    <div
+      class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4"
+    >
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800">Listado de Laboratorios</h2>
+        <p class="text-slate-500 text-sm mt-1">
+          {{
+            currentUser?.role === 'admin'
+              ? 'Gestión total del sistema'
+              : 'Mis laboratorios asignados'
+          }}
+        </p>
+      </div>
+
+      <!-- Botón solo visible para ADMIN -->
+      <button
+        *ngIf="currentUser?.role === 'admin'"
+        type="button"
+        (click)="crearLaboratorio()"
+        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nuevo laboratorio
+      </button>
+    </div>
+
+    <!-- Card contenedora -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+
+      <!-- Estado: cargando -->
+      <div *ngIf="isLoadingLabs" class="p-8 text-center text-slate-500 text-sm">
+        Cargando laboratorios...
+      </div>
+
+      <!-- Estado: sin datos -->
+      <div
+        *ngIf="!isLoadingLabs && filteredLabs.length === 0"
+        class="p-8 text-center text-slate-500 text-sm"
+      >
+        No se encontraron laboratorios.
+      </div>
+
+      <!-- VISTA MÓVIL: cards -->
+      <div
+        *ngIf="!isLoadingLabs && filteredLabs.length > 0"
+        class="space-y-3 p-3 md:hidden"
+      >
+        <div
+          *ngFor="let lab of filteredLabs"
+          class="bg-slate-50 rounded-xl border border-slate-200 p-4 flex flex-col gap-3"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs text-slate-400 uppercase">Código</div>
+              <div class="font-semibold text-slate-800">
+                {{ lab.code }}
+              </div>
+              <div class="text-slate-600 text-sm">
+                {{ lab.name }}
+              </div>
+            </div>
+            <span
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+              [ngClass]="lab.active
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'"
+            >
+              {{ lab.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+
+          <div class="text-sm text-slate-600">
+            <span class="font-medium">Ubicación:</span>
+            <span class="ml-1">{{ lab.location }}</span>
+          </div>
+
+          <div class="text-sm text-slate-600">
+            <span class="font-medium">Capacidad:</span>
+            <span class="ml-1">{{ lab.capacity }}</span>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              (click)="openEditModal(lab)"
+              class="px-3 py-1 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Modificar
+            </button>
+            <button
+              type="button"
+              (click)="eliminarLaboratorio(lab)"
+              class="px-3 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100"
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA ESCRITORIO: tabla -->
+      <div
+        *ngIf="!isLoadingLabs && filteredLabs.length > 0"
+        class="overflow-x-auto hidden md:block"
+      >
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead
+            class="bg-slate-50 text-slate-800 font-semibold uppercase text-xs border-b border-slate-200"
+          >
+            <tr>
+              <th class="px-6 py-4">Código</th>
+              <th class="px-6 py-4">Nombre laboratorio</th>
+              <th class="px-6 py-4">Ubicación</th>
+              <th class="px-6 py-4 text-center">Capacidad</th>
+              <th class="px-6 py-4 text-center">Estado</th>
+              <th class="px-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr
+              *ngFor="let lab of filteredLabs"
+              class="hover:bg-slate-50 transition-colors"
+            >
+              <td class="px-6 py-4 font-mono text-slate-500">
+                {{ lab.code }}
+              </td>
+              <td class="px-6 py-4 font-medium text-slate-800">
+                {{ lab.name }}
+              </td>
+              <td class="px-6 py-4">
+                {{ lab.location }}
+              </td>
+              <td class="px-6 py-4 text-center">
+                {{ lab.capacity }}
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span
+                  [ngClass]="lab.active
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'"
+                  class="px-2 py-1 rounded-full text-xs font-semibold"
+                >
+                  {{ lab.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    (click)="openEditModal(lab)"
+                    class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Modificar"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="eliminarLaboratorio(lab)"
+                    class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        *ngIf="errorMessage"
+        class="px-6 py-3 bg-red-50 border-t border-red-100 text-xs text-red-700"
+      >
+        {{ errorMessage }}
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL EDITAR LABORATORIO -->
+  <div
+    *ngIf="showEditModal && selectedLab"
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-30"
+  >
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 border border-slate-200">
+      <h2 class="text-lg font-semibold text-slate-800 mb-4">
+        Modificar laboratorio
+      </h2>
+
+      <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="space-y-4">
+        <!-- Código -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Código</label>
+          <input
+            type="text"
+            formControlName="code"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+          />
+          <div *ngIf="isEditFieldInvalid('code')" class="text-xs text-red-500 mt-1">
+            El código es obligatorio.
+          </div>
+        </div>
+
+        <!-- Nombre -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Nombre laboratorio</label>
+          <input
+            type="text"
+            formControlName="name"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+          />
+          <div *ngIf="isEditFieldInvalid('name')" class="text-xs text-red-500 mt-1">
+            El nombre es obligatorio.
+          </div>
+        </div>
+
+        <!-- Ubicación -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Ubicación</label>
+          <input
+            type="text"
+            formControlName="location"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+          />
+        </div>
+
+        <!-- Capacidad + Estado -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Capacidad</label>
+            <input
+              type="number"
+              formControlName="capacity"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+            />
+          </div>
+          <div class="flex items-center mt-4 md:mt-6">
+            <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                formControlName="active"
+                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span>Laboratorio activo</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Select de usuario asignado (solo admin) -->
+        <div *ngIf="currentUser?.role === 'admin'">
+          <label class="block text-sm font-medium text-slate-700 mb-1">
+            Usuario asignado
+          </label>
+          <select
+            formControlName="userId"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+          >
+            <option [ngValue]="null">Sin asignar</option>
+            <option
+              *ngFor="let u of allUsers"
+              [ngValue]="u.id"
+            >
+              {{ u.nombre }} ({{ u.email }})
+            </option>
+          </select>
+        </div>
+
+        <!-- Si no es admin, solo mostramos el responsable actual -->
+        <div *ngIf="currentUser?.role !== 'admin'" class="text-xs text-slate-500">
+          <span class="font-medium">Responsable actual:</span>
+          <span class="ml-1">
+            {{ getUserNameById(selectedLab ? selectedLab.userId : null) }}
+          </span>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+          <button
+            type="button"
+            (click)="closeEditModal()"
+            class="px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="editForm.invalid || isSaving"
+            class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            <span *ngIf="isSaving">Guardando...</span>
+            <span *ngIf="!isSaving">Guardar cambios</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

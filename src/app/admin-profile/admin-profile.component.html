@@ -1,0 +1,489 @@
+<div class="min-h-screen bg-slate-100 font-sans">
+  <!-- Navbar Simple de retorno -->
+  <nav class="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+    <div
+      class="max-w-5xl mx-auto flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors cursor-pointer"
+      (click)="goHome()"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      <span class="font-medium">Volver al Panel</span>
+    </div>
+  </nav>
+
+  <main class="p-6">
+    <div class="max-w-5xl mx-auto">
+      <!-- Título + botón actualizar -->
+      <div
+        class="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+      >
+        <div>
+          <h1 class="text-2xl font-bold text-slate-800">Administrar cuentas</h1>
+          <p class="text-slate-500 text-sm mt-1">
+            Gestión de usuarios registrados en el sistema.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          (click)="refreshTable()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 shadow-sm"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.88-3.36L23 10"></path>
+            <path d="M21 15a9 9 0 0 1-14.88 3.36L1 14"></path>
+          </svg>
+          Actualizar tabla
+        </button>
+      </div>
+
+      <!-- Card principal -->
+      <div
+        class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+      >
+        <!-- Estado: cargando -->
+        <div
+          *ngIf="isLoading"
+          class="p-8 text-center text-slate-500 text-sm"
+        >
+          Cargando usuarios...
+        </div>
+
+        <!-- Estado: sin datos -->
+        <div
+          *ngIf="!isLoading && users.length === 0"
+          class="p-8 text-center text-slate-500 text-sm"
+        >
+          No se encontraron usuarios registrados.
+        </div>
+
+        <!-- ===== VISTA MÓVIL: CARDS (sin scroll horizontal) ===== -->
+        <div
+          *ngIf="!isLoading && users.length > 0"
+          class="space-y-3 p-3 md:hidden"
+        >
+          <div
+            *ngFor="let u of users"
+            class="bg-slate-50 rounded-xl border border-slate-200 p-4 flex flex-col gap-3"
+          >
+            <!-- Cabecera usuario -->
+            <div class="flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-semibold"
+              >
+                {{ u.nombre.charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <div class="font-semibold text-slate-800">
+                  {{ u.nombre }}
+                </div>
+                <div class="text-xs text-slate-400">ID: {{ u.id }}</div>
+              </div>
+            </div>
+
+            <!-- Correo -->
+            <div class="text-sm">
+              <span class="block text-xs text-slate-400 uppercase mb-1"
+                >Correo</span
+              >
+              <span class="text-slate-700 break-all">{{ u.email }}</span>
+            </div>
+
+            <!-- Rol y estado -->
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- Rol -->
+              <button
+                type="button"
+                (click)="toggleAdmin(u)"
+                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border transition-colors"
+                [ngClass]="
+                  u.admin
+                    ? 'bg-blue-100 text-blue-700 border-blue-200'
+                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                "
+              >
+                {{ u.admin ? 'Administrador' : 'Estudiante' }}
+              </button>
+
+              <!-- Estado -->
+              <button
+                type="button"
+                (click)="toggleActivo(u)"
+                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border transition-colors"
+                [ngClass]="
+                  u.activo
+                    ? 'bg-green-100 text-green-700 border-green-200'
+                    : 'bg-red-100 text-red-700 border-red-200'
+                "
+              >
+                {{ u.activo ? 'Activo' : 'Inactivo' }}
+              </button>
+            </div>
+
+            <!-- Fecha -->
+            <div class="text-xs text-slate-500">
+              Creado:
+              <span class="font-medium">
+                {{ u.createdAt | date : 'dd/MM/yyyy HH:mm' }}
+              </span>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                (click)="openEditModal(u)"
+                class="px-3 py-1 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Modificar
+              </button>
+              <button
+                type="button"
+                (click)="openDeleteModal(u)"
+                class="px-3 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== VISTA ESCRITORIO: TABLA ===== -->
+        <div
+          *ngIf="!isLoading && users.length > 0"
+          class="overflow-x-auto hidden md:block"
+        >
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead
+              class="bg-slate-50 text-slate-800 font-semibold uppercase text-xs border-b border-slate-200"
+            >
+              <tr>
+                <th class="px-6 py-3">Usuario</th>
+                <th class="px-6 py-3">Correo</th>
+                <th class="px-6 py-3 text-center">Rol</th>
+                <th class="px-6 py-3 text-center">Estado</th>
+                <th class="px-6 py-3">Creado</th>
+                <th class="px-6 py-3 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr
+                *ngFor="let u of users"
+                class="hover:bg-slate-50 transition-colors"
+              >
+                <!-- Usuario -->
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-semibold"
+                    >
+                      {{ u.nombre.charAt(0).toUpperCase() }}
+                    </div>
+                    <div>
+                      <div class="font-medium text-slate-800">
+                        {{ u.nombre }}
+                      </div>
+                      <div class="text-xs text-slate-400">
+                        ID: {{ u.id }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Correo -->
+                <td class="px-6 py-4">
+                  <span class="text-slate-700">{{ u.email }}</span>
+                </td>
+
+                <!-- Rol -->
+                <td class="px-6 py-4 text-center">
+                  <button
+                    type="button"
+                    (click)="toggleAdmin(u)"
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border transition-colors"
+                    [ngClass]="
+                      u.admin
+                        ? 'bg-blue-100 text-blue-700 border-blue-200'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    "
+                  >
+                    {{ u.admin ? 'Administrador' : 'Estudiante' }}
+                  </button>
+                </td>
+
+                <!-- Estado -->
+                <td class="px-6 py-4 text-center">
+                  <button
+                    type="button"
+                    (click)="toggleActivo(u)"
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border transition-colors"
+                    [ngClass]="
+                      u.activo
+                        ? 'bg-green-100 text-green-700 border-green-200'
+                        : 'bg-red-100 text-red-700 border-red-200'
+                    "
+                  >
+                    {{ u.activo ? 'Activo' : 'Inactivo' }}
+                  </button>
+                </td>
+
+                <!-- Fecha creación -->
+                <td class="px-6 py-4 text-sm text-slate-500">
+                  {{ u.createdAt | date : 'dd/MM/yyyy HH:mm' }}
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-6 py-4">
+                  <div class="flex justify-end gap-2">
+                    <!-- Botón Modificar -->
+                    <button
+                      type="button"
+                      (click)="openEditModal(u)"
+                      class="px-3 py-1 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Modificar
+                    </button>
+
+                    <!-- Botón Eliminar -->
+                    <button
+                      type="button"
+                      (click)="openDeleteModal(u)"
+                      class="px-3 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div
+          *ngIf="errorMessage"
+          class="px-6 py-3 bg-red-50 border-t border-red-100 text-xs text-red-700"
+        >
+          {{ errorMessage }}
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal editar usuario -->
+  <div
+    *ngIf="showEditModal && selectedUser"
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-30"
+  >
+    <div
+      class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 border border-slate-200"
+    >
+      <h2 class="text-lg font-semibold text-slate-800 mb-4">
+        Modificar usuario
+      </h2>
+
+      <form
+        [formGroup]="editForm"
+        (ngSubmit)="saveEdit()"
+        class="space-y-4"
+      >
+        <!-- Nombre -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1"
+            >Nombre completo</label
+          >
+          <input
+            type="text"
+            formControlName="nombre"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+          />
+          <div
+            *ngIf="isEditFieldInvalid('nombre')"
+            class="text-xs text-red-500 mt-1"
+          >
+            El nombre es obligatorio.
+          </div>
+        </div>
+
+        <!-- Correo -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1"
+            >Correo</label
+          >
+          <input
+            type="email"
+            formControlName="email"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+          />
+          <div
+            *ngIf="isEditFieldInvalid('email')"
+            class="text-xs text-red-500 mt-1"
+          >
+            Ingresa un correo válido.
+          </div>
+        </div>
+
+        <!-- Seguridad -->
+        <div class="pt-2 border-t border-slate-100 mt-2">
+          <h3 class="text-sm font-medium text-slate-800 mb-2">Seguridad</h3>
+          <p class="text-xs text-slate-500 mb-3">
+            Deja la contraseña en blanco si no deseas cambiarla.
+          </p>
+
+          <!-- Nueva contraseña -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1"
+              >Nueva contraseña</label
+            >
+            <input
+              type="password"
+              formControlName="password"
+              placeholder="••••••••"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+            />
+            <div
+              *ngIf="
+                editForm.get('password')?.errors?.['minlength'] &&
+                editForm.get('password')?.touched
+              "
+              class="text-xs text-red-500 mt-1"
+            >
+              Mínimo 6 caracteres.
+            </div>
+          </div>
+
+          <!-- Confirmar contraseña -->
+          <div class="mt-3">
+            <label class="block text-sm font-medium text-slate-700 mb-1"
+              >Confirmar contraseña</label
+            >
+            <input
+              type="password"
+              formControlName="confirmPassword"
+              placeholder="••••••••"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+            />
+            <div
+              *ngIf="
+                editForm.hasError('mismatch') &&
+                (editForm.get('confirmPassword')?.touched ||
+                  editForm.get('password')?.touched)
+              "
+              class="text-xs text-red-500 mt-1"
+            >
+              Las contraseñas no coinciden.
+            </div>
+          </div>
+
+          <!-- Rol dentro del modal -->
+          <div class="mt-4">
+            <label
+              class="inline-flex items-center gap-2 text-sm text-slate-700"
+            >
+              <input
+                type="checkbox"
+                formControlName="admin"
+                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span>Usuario administrador</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Info rol/estado -->
+        <div
+          class="flex items-center justify-between text-xs text-slate-500 mt-2"
+        >
+          <div>
+            <span class="font-medium">Rol:</span>
+            <span class="ml-1">
+              {{ editForm.get('admin')?.value ? 'Administrador' : 'Estudiante' }}
+            </span>
+          </div>
+          <div>
+            <span class="font-medium">Estado:</span>
+            <span class="ml-1">{{
+              selectedUser.activo ? 'Activo' : 'Inactivo'
+            }}</span>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+          <button
+            type="button"
+            (click)="closeEditModal()"
+            class="px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="editForm.invalid || isSaving"
+            class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            <span *ngIf="isSaving">Guardando...</span>
+            <span *ngIf="!isSaving">Guardar cambios</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal eliminar usuario -->
+  <div
+    *ngIf="showDeleteModal && userToDelete"
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-30"
+  >
+    <div
+      class="bg-white rounded-xl shadow-lg w-full max-w-sm p-6 border border-slate-200"
+    >
+      <h2 class="text-lg font-semibold text-slate-800 mb-3">
+        Eliminar usuario
+      </h2>
+      <p class="text-sm text-slate-600 mb-6">
+        ¿Está seguro que desea eliminar al usuario
+        <span class="font-semibold">{{ userToDelete.nombre }}</span>?
+      </p>
+
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="cancelDelete()"
+          class="px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100"
+        >
+          No
+        </button>
+        <button
+          type="button"
+          (click)="confirmDelete()"
+          class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700"
+        >
+          Sí, eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,94 @@
+<div class="min-h-screen bg-slate-100 font-sans">
+
+  <!-- Navbar Simple de retorno -->
+  <nav class="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+    <div class="max-w-3xl mx-auto flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors cursor-pointer" (click)="goHome()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      <span class="font-medium">Volver al Panel</span>
+    </div>
+  </nav>
+
+  <main class="p-6 flex justify-center">
+    <div class="bg-white rounded-xl shadow-lg border border-slate-200 w-full max-w-3xl overflow-hidden">
+
+      <!-- Encabezado del Perfil -->
+      <div class="bg-slate-50 p-8 border-b border-slate-200 flex flex-col md:flex-row items-center gap-6">
+
+        <!-- Avatar Grande -->
+        <div class="w-24 h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-4xl font-bold shadow-md">
+          {{ currentUser?.nombre?.charAt(0)?.toUpperCase() }}
+        </div>
+
+        <div class="text-center md:text-left">
+          <h1 class="text-2xl font-bold text-slate-800">{{ currentUser?.nombre }}</h1>
+          <p class="text-slate-500">{{ currentUser?.email }}</p>
+          <div class="mt-2 flex items-center justify-center md:justify-start gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+              {{ currentUser?.admin ? 'Administrador' : 'Estudiante' }}
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+              Cuenta Activa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Edición -->
+      <div class="p-8">
+        <h2 class="text-lg font-semibold text-slate-800 mb-6 pb-2 border-b border-slate-100">
+          Información Personal
+        </h2>
+
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Campo: Nombre -->
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Nombre Completo</label>
+              <input type="text" formControlName="nombre"
+                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+              <div *ngIf="isFieldInvalid('nombre')" class="text-red-500 text-xs mt-1">El nombre es obligatorio.</div>
+            </div>
+
+            <!-- Campo: Email -->
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Correo Institucional</label>
+              <input type="email" formControlName="email"
+                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+              <div *ngIf="isFieldInvalid('email')" class="text-red-500 text-xs mt-1">Ingresa un correo válido.</div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <h3 class="text-md font-medium text-slate-800 mb-4">Seguridad</h3>
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100 mb-4 text-sm text-yellow-800">
+               Deja el campo de contraseña <strong>en blanco</strong> si no deseas cambiarla.
+            </div>
+
+            <!-- Campo: Contraseña (Opcional) -->
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Nueva Contraseña</label>
+              <input type="password" formControlName="password" placeholder="••••••••"
+                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+              <div *ngIf="profileForm.get('password')?.errors?.['minlength']" class="text-red-500 text-xs mt-1">Mínimo 6 caracteres.</div>
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="flex items-center justify-end gap-4 pt-4 border-t border-slate-100">
+            <button type="button" (click)="goHome()" class="px-6 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="profileForm.invalid || isSaving"
+              class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2">
+              <span *ngIf="isSaving">Guardando...</span>
+              <span *ngIf="!isSaving">Guardar Cambios</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </main>
+</div>
