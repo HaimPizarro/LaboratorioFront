@@ -64,14 +64,14 @@ export class HomeComponent implements OnInit {
       location: [''],
       capacity: [0, [Validators.min(0)]],
       active: [true],
-      userId: [null], // puede ser null o ID
+      userId: [null],
     });
   }
 
   ngOnInit(): void {
     const rawUser = this.authService.getUserFromStorage();
 
-    // Si no hay usuario en storage → al login
+    // Si no hay usuario en storage al login
     if (!rawUser) {
       this.router.navigate(['/login']);
       return;
@@ -219,16 +219,16 @@ export class HomeComponent implements OnInit {
         // El back puede devolver { message, lab } o directamente el lab
         const updated: Lab = (resp as any).lab ?? resp;
 
-        // 1) Actualizar el array principal
+        //Actualizar el array principal
         const idx = this.labs.findIndex(l => l.id === updated.id);
         if (idx >= 0) {
           this.labs[idx] = { ...this.labs[idx], ...updated };
         }
 
-        // 2) Reaplicar el filtro (admin vs usuario normal)
+        //Reaplicar el filtro (admin vs usuario normal)
         this.applyLabFilter();
 
-        // 3) Feedback y cerrar modal
+        //Feedback y cerrar modal
         this.toast.success('Laboratorio actualizado correctamente');
         this.isSaving = false;
         this.closeEditModal();

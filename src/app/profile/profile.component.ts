@@ -10,7 +10,6 @@ interface User {
   email: string;
   activo: boolean;
   admin: boolean;
-  // puedes agregar createdAt, etc. si los usas después
 }
 
 @Component({
@@ -32,21 +31,21 @@ export class ProfileComponent implements OnInit {
     this.profileForm = this.fb.group({
       nombre: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.minLength(6)]], // opcional, solo valida si escriben algo
+      password: ['', [Validators.minLength(6)]],
     });
   }
 
   ngOnInit() {
-    // 1. Obtener usuario desde localStorage
+    //Obtener usuario desde localStorage
     const rawUser = this.authService.getUserFromStorage();
 
     if (!rawUser) {
-      // Si no hay sesión, lo mandamos al login
+      //Si no hay sesión, lo mandamos al login
       this.router.navigate(['/login']);
       return;
     }
 
-    // 2. Guardamos en currentUser tipado
+    //Guardamos en currentUser tipado
     this.currentUser = {
       id: rawUser.id,
       nombre: rawUser.nombre,
@@ -55,11 +54,11 @@ export class ProfileComponent implements OnInit {
       admin: rawUser.admin,
     };
 
-    // 3. Rellenar el formulario
+    //Rellenar el formulario
     this.profileForm.patchValue({
       nombre: this.currentUser.nombre,
       email: this.currentUser.email,
-      password: '', // nunca mostramos contraseña real
+      password: '',
     });
   }
 
@@ -72,7 +71,7 @@ export class ProfileComponent implements OnInit {
     this.isSaving = true;
     const formValue = this.profileForm.value;
 
-    // 4. Armamos el payload para el backend
+    //Arma el payload para el backend
     const updatedData = {
       id: this.currentUser.id,
       nombre: formValue.nombre,

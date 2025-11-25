@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../services/auth.service'; // <--- 1. Importar el servicio
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-registro',
@@ -31,7 +31,6 @@ export class NuevaCuentaComponent {
       this.errorMessage = '';
       const formValue = this.registerForm.value;
 
-      // 3. Construimos el objeto exacto que espera Java
       const nuevoUsuario = {
         nombre: formValue.nombre,
         email: formValue.email,
@@ -41,7 +40,7 @@ export class NuevaCuentaComponent {
         createdAt: new Date()
       };
 
-      // 4. Llamada al Backend
+      //Llamada al Backend
       this.authService.register(nuevoUsuario).subscribe({
         next: (response) => {
           console.log('Usuario creado:', response);
